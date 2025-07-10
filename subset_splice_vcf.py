@@ -9,7 +9,7 @@ def ensure_bgzip_and_index(input_vcf):
     if input_vcf.endswith(".vcf.gz"):
         index_file = os.path.join(input_dir, input_basename + ".tbi")
         if not os.path.exists(index_file):
-            print("🚀 Indexing existing bgzipped VCF...")
+            print("Indexing existing bgzipped VCF...")
             cmd = [
                 "docker", "run", "--rm",
                 "-v", f"{input_dir}:/data",
@@ -19,7 +19,7 @@ def ensure_bgzip_and_index(input_vcf):
             ]
             subprocess.run(cmd)
         else:
-            print("✅ Already bgzipped and indexed.")
+            print("Already bgzipped and indexed.")
         return input_vcf
     else:
         # Use bcftools view -Oz to compress + index
@@ -38,7 +38,7 @@ def ensure_bgzip_and_index(input_vcf):
         subprocess.run(cmd)
         if not os.path.exists(compressed_vcf):
             raise FileNotFoundError(f"⚠️ Did not create {compressed_vcf}")
-        print(f"✅ Created {compressed_vcf} with index.")
+        print(f"Created {compressed_vcf} with index.")
         return compressed_vcf
 
 def run_bcftools_and_write(input_vcf, output_tsv):
@@ -60,17 +60,17 @@ def run_bcftools_and_write(input_vcf, output_tsv):
         f"}}' OFS='\\t' > {docker_output}"
     ]
 
-    print("🚀 Running:", " ".join(cmd))
+    print("Running:", " ".join(cmd))
     subprocess.run(cmd)
 
     local_output = os.path.join(input_dir, os.path.basename(output_tsv))
     if not os.path.exists(local_output):
-        raise FileNotFoundError(f"⚠️ Docker did not create file: {local_output}")
-    print(f"✅ Filtered TSV written to: {local_output}")
+        raise FileNotFoundError(f"Docker did not create file: {local_output}")
+    print(f"Filtered TSV written to: {local_output}")
     return local_output
 
 def build_sites_file(tsv_file, sites_file):
-    print(f"🚀 Building true VCF-style sites file from {tsv_file}")
+    print(f"Building true VCF-style sites file from {tsv_file}")
     with open(tsv_file, 'r') as infile, open(sites_file, 'w') as outfile:
         # Minimal required VCF header
         outfile.write("##fileformat=VCFv4.2\n")
@@ -80,7 +80,7 @@ def build_sites_file(tsv_file, sites_file):
                 continue
             fields = line.strip().split("\t")
             outfile.write(f"{fields[0]}\t{fields[1]}\t.\t{fields[2]}\t{fields[3]}\t.\t.\t.\n")
-    print(f"✅ Sites file created at {sites_file}")
+    print(f"Sites file created at {sites_file}")
 
 def subset_vcf(input_vcf, sites_file, subset_vcf):
     input_dir = os.path.dirname(input_vcf).replace("\\", "/")
@@ -97,13 +97,13 @@ def subset_vcf(input_vcf, sites_file, subset_vcf):
         "-Ov", "-o", docker_output
     ]
 
-    print("🚀 Running:", " ".join(cmd))
+    print("Running:", " ".join(cmd))
     subprocess.run(cmd)
 
     local_output = os.path.join(input_dir, os.path.basename(subset_vcf))
     if not os.path.exists(local_output):
-        raise FileNotFoundError(f"⚠️ Docker did not create file: {local_output}")
-    print(f"✅ Subset VCF written to: {local_output}")
+        raise FileNotFoundError(f"Docker did not create file: {local_output}")
+    print(f"Subset VCF written to: {local_output}")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -126,7 +126,7 @@ def main():
     build_sites_file(output_tsv, sites_file)
     subset_vcf(processed_vcf, sites_file, subset_output_vcf)
 
-    print("\n✅ All done! Filtered VCF:", subset_output_vcf)
+    print("\n All done! Filtered spliceAI VCF:", subset_output_vcf)
 
 if __name__ == "__main__":
     main()
