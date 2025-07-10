@@ -27,7 +27,7 @@ def ensure_bgzip_and_index(input_vcf):
         docker_input = f"/data/{input_basename}"
         docker_output = f"/data/{os.path.basename(compressed_vcf)}"
 
-        print("🚀 Compressing with bcftools view -Oz and indexing...")
+        print("Compressing with bcftools view -Oz and indexing...")
         cmd = [
             "docker", "run", "--rm",
             "-v", f"{input_dir}:/data",
