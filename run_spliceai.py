@@ -11,7 +11,7 @@ def run_spliceai(filename, data_dir, ref_dir, spliceai_dir, ref_fasta):
     output_vcf = f"/spliceai/{output_basename}"
     local_output_path = os.path.join(spliceai_dir, output_basename)
 
-    print(f"\n🚀 Running SpliceAI on {filename}")
+    print(f"\nRunning SpliceAI on {filename}")
 
     docker_cmd = [
         "docker", "run", "--rm",
