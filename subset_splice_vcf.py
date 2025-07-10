@@ -1,6 +1,6 @@
+import os
 import subprocess
 import argparse
-import os
 
 def ensure_bgzip_and_index(input_vcf):
     input_dir = os.path.dirname(input_vcf).replace("\\", "/")
@@ -9,7 +9,7 @@ def ensure_bgzip_and_index(input_vcf):
     if input_vcf.endswith(".vcf.gz"):
         index_file = os.path.join(input_dir, input_basename + ".tbi")
         if not os.path.exists(index_file):
-            print("Indexing existing bgzipped VCF...")
+            print(f"Indexing existing bgzipped VCF: {input_vcf}")
             cmd = [
                 "docker", "run", "--rm",
                 "-v", f"{input_dir}:/data",
@@ -27,7 +27,7 @@ def ensure_bgzip_and_index(input_vcf):
         docker_input = f"/data/{input_basename}"
         docker_output = f"/data/{os.path.basename(compressed_vcf)}"
 
-        print("Compressing with bcftools view -Oz and indexing...")
+        print(f"Compressing with bcftools view -Oz and indexing: {input_vcf}")
         cmd = [
             "docker", "run", "--rm",
             "-v", f"{input_dir}:/data",
@@ -37,7 +37,7 @@ def ensure_bgzip_and_index(input_vcf):
         ]
         subprocess.run(cmd)
         if not os.path.exists(compressed_vcf):
-            raise FileNotFoundError(f"⚠️ Did not create {compressed_vcf}")
+            raise FileNotFoundError(f"Did not create {compressed_vcf}")
         print(f"Created {compressed_vcf} with index.")
         return compressed_vcf
 
@@ -70,9 +70,8 @@ def run_bcftools_and_write(input_vcf, output_tsv):
     return local_output
 
 def build_sites_file(tsv_file, sites_file):
-    print(f"Building true VCF-style sites file from {tsv_file}")
+    print(f"Building VCF sites file from {tsv_file}")
     with open(tsv_file, 'r') as infile, open(sites_file, 'w') as outfile:
-        # Minimal required VCF header
         outfile.write("##fileformat=VCFv4.2\n")
         outfile.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
         for line in infile:
@@ -107,26 +106,27 @@ def subset_vcf(input_vcf, sites_file, subset_vcf):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, help="Input VCF file (.vcf or .vcf.gz)")
+    parser.add_argument("--folder", required=True, help="Folder containing VCF files")
     args = parser.parse_args()
 
-    input_vcf = os.path.abspath(args.input).replace("\\", "/")
-    input_dir = os.path.dirname(input_vcf)
+    vcf_folder = os.path.abspath(args.folder).replace("\\", "/")
 
-    # Ensure bgzip + index
-    processed_vcf = ensure_bgzip_and_index(input_vcf)
+    for file in os.listdir(vcf_folder):
+        if file.endswith(".vcf") or file.endswith(".vcf.gz"):
+            input_vcf = os.path.join(vcf_folder, file)
+            print(f"\n Processing {input_vcf}")
 
-    # File names
-    output_tsv = os.path.join(input_dir, os.path.basename(processed_vcf).replace(".vcf.gz", ".high.tsv"))
-    sites_file = os.path.join(input_dir, "exact_sites.vcf")
-    subset_output_vcf = os.path.join(input_dir, os.path.basename(processed_vcf).replace(".vcf.gz", ".subset_high.vcf"))
+            # Pipeline
+            processed_vcf = ensure_bgzip_and_index(input_vcf)
+            output_tsv = os.path.join(vcf_folder, file.replace(".vcf", "").replace(".gz", "") + ".high.tsv")
+            sites_file = os.path.join(vcf_folder, "sites_" + file.replace(".vcf", "").replace(".gz", "") + ".vcf")
+            subset_output_vcf = os.path.join(vcf_folder, file.replace(".vcf", "").replace(".gz", "") + ".subset_high.vcf")
 
-    # Pipeline
-    run_bcftools_and_write(processed_vcf, output_tsv)
-    build_sites_file(output_tsv, sites_file)
-    subset_vcf(processed_vcf, sites_file, subset_output_vcf)
+            run_bcftools_and_write(processed_vcf, output_tsv)
+            build_sites_file(output_tsv, sites_file)
+            subset_vcf(processed_vcf, sites_file, subset_output_vcf)
 
-    print("\n All done! Filtered spliceAI VCF:", subset_output_vcf)
+            print(f"\n All done for {file}! Filtered spliceAI VCF: {subset_output_vcf}")
 
 if __name__ == "__main__":
     main()
