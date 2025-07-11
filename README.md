@@ -1,7 +1,7 @@
 # DNAtools
 This is a collection of Python scripts for variant analysis pipelines, with a focus on identifying and visualising predicted splice-disrupting mutations.  
 
-This toolkit allows you to run SpliceAI on VCF files, filter variants based on predicted splice impact, and convert results into MAF format for downstream visualization (e.g. with `maftools` in R).
+This toolkit allows you to run SpliceAI on VCF files, filter variants based on predicted splice impact, and convert results into MAF format for downstream visualisation (e.g. with `maftools` in R).
 
 
 ## Workflow Overview
@@ -15,7 +15,7 @@ This pipeline processes DNA variant data in three main steps:
    Filters variants to retain only those with SpliceAI delta > 0.5, enriching for likely splice-altering mutations.
 
 3. **Conversion to MAF format (`vcftomaf.py`)**  
-   Converts filtered VCF files into MAF format, ready for downstream visualization (e.g. oncoplots in `maftools`).
+   Converts filtered VCF files into MAF format, ready for downstream visualisation (e.g. oncoplots in `maftools`).
 
 ---
 
