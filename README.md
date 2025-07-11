@@ -21,6 +21,12 @@ This pipeline processes DNA variant data in three main steps:
 
 ## Usage
 
+### Pull Docker Containers
+
+```bash
+./pull_dockers.sh
+```
+
 ### Run SpliceAI
 Runs SpliceAI on your VCF to predict splicing impact.
 
